@@ -1,18 +1,28 @@
 import flet as ft
+import sqlite3
+
+# Función para obtener listas de usuarios
+def obtener_usuarios_ingresos():
+    conn = sqlite3.connect("usuarios.db")
+    cur = conn.cursor()
+    
+    cur.execute("SELECT nombre FROM usuarios WHERE dentro = 1")
+    dentro = [r[0] for r in cur.fetchall()]
+    
+    cur.execute("SELECT nombre FROM usuarios WHERE dentro = 0")
+    fuera = [r[0] for r in cur.fetchall()]
+    
+    conn.close()
+    return dentro, fuera
 
 def main(page: ft.Page):
     page.title = "Sistema de Monitoreo"
     page.padding = 20
     page.window_maximized = True
 
-    # Contenido de cada pestaña
-    contenido_ingresos = ft.Text("Contenido de Ingresos", size=20)
-    contenido_estados = ft.Text("Contenido de Estados", size=20)
-    contenido_operaciones = ft.Text("Contenido de Operaciones", size=20)
-
-    # Contenedor que cambia según el botón presionado
+    # Contenedor principal
     contenido_area = ft.Container(
-        content=contenido_ingresos,  # inicial
+        content=ft.Text("Seleccioná una pestaña"),
         bgcolor=ft.Colors.WHITE,
         border=ft.border.all(2),
         height=400,
@@ -20,20 +30,47 @@ def main(page: ft.Page):
         padding=10,
     )
 
-    # Funciones para cambiar el contenido
+    # --- Vista de INGRESOS ---
+    def construir_contenido_ingresos():
+        dentro, fuera = obtener_usuarios_ingresos()
+
+        columna_dentro = ft.Column([
+            ft.Text(f"🟢 Ingresaron ({len(dentro)})", size=18, weight="bold"),
+            ft.ListView([ft.Text(nombre) for nombre in dentro], spacing=5, height=250)
+        ], expand=True)
+
+        columna_fuera = ft.Column([
+            ft.Text(f"🔴 No ingresaron ({len(fuera)})", size=18, weight="bold"),
+            ft.ListView([ft.Text(nombre) for nombre in fuera], spacing=5, height=250)
+        ], expand=True)
+
+        fila = ft.Row(
+            [columna_dentro, columna_fuera],
+            spacing=50,
+            alignment=ft.MainAxisAlignment.SPACE_EVENLY
+        )
+
+        boton_actualizar = ft.ElevatedButton("Actualizar", on_click=lambda e: mostrar_ingresos(None))
+
+        return ft.Column([
+            fila,
+            boton_actualizar
+        ])
+
+    # Funciones para pestañas
     def mostrar_ingresos(e):
-        contenido_area.content = contenido_ingresos
+        contenido_area.content = construir_contenido_ingresos()
         page.update()
 
     def mostrar_estados(e):
-        contenido_area.content = contenido_estados
+        contenido_area.content = ft.Text("Contenido de Estados", size=20)
         page.update()
 
     def mostrar_operaciones(e):
-        contenido_area.content = contenido_operaciones
+        contenido_area.content = ft.Text("Contenido de Operaciones", size=20)
         page.update()
 
-    # Botones de navegación
+    # Botones superiores
     botones_menu = ft.Row(
         [
             ft.ElevatedButton("Ingresos", on_click=mostrar_ingresos),
@@ -44,7 +81,7 @@ def main(page: ft.Page):
         spacing=20
     )
 
-    # Título
+    # Título principal
     titulo = ft.Text("Sistema de monitoreo", size=25, weight="bold", text_align="center")
 
     # Layout general
@@ -61,4 +98,5 @@ def main(page: ft.Page):
         )
     )
 
+# Ejecutar en modo ventana (no navegador)
 ft.app(target=main)

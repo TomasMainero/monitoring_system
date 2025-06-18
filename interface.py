@@ -18,33 +18,7 @@ def obtener_usuarios_ingresos():
     conn.close()
     return dentro, fuera
 
-def manejar_click_puerta(nombre, abrir):
-        if abrir:
-            abrir_puerta(nombre)
-        else:
-            cerrar_puerta(nombre)
-        mostrar_puertas
 
-# Contenido puertas
-def construir_contenido_puertas():
-    lista_componentes = []
-    for nombre, estado in obtener_todas.items():
-        estado_texto = estado_puerta(nombre)
-        texto_estado = ft.Text(f"{nombre.title()}: {estado_texto}", size=16)
-
-        boton_abrir = ft.ElevatedButton(
-            "Abrir",
-            on_click=lambda e, n=nombre: manejar_click_puerta(n, True)
-        )
-
-        boton_cerrar = ft.ElevatedButton(
-            "Abrir",
-            on_click=lambda e, n=nombre: manejar_click_puerta(n, True)
-        )
-
-        fila = ft.Row([texto_estado, boton_abrir, boton_cerrar], spacing=10)
-        lista_componentes.append(fila)
-    return ft.Column(lista_componentes)
     
 
 def main(page: ft.Page):
@@ -61,6 +35,38 @@ def main(page: ft.Page):
         width=float('inf'),
         padding=10,
     )
+
+    # --- Funciones de PUERTAS ---
+    def manejar_click_puerta(nombre, abrir):
+        if abrir:
+            abrir_puerta(nombre)
+        else:
+            cerrar_puerta(nombre)
+        mostrar_puertas(None)
+
+    def construir_contenido_puertas():
+        lista_componentes = []
+        for nombre, estado in obtener_todas().items():
+            estado_texto = estado_puerta(nombre)
+            texto_estado = ft.Text(f"{nombre.title()}: {estado_texto}", size=16)
+
+            boton_abrir = ft.ElevatedButton(
+                "Abrir",
+                on_click=lambda e, n=nombre: manejar_click_puerta(n, True)
+            )
+
+            boton_cerrar = ft.ElevatedButton(
+                "Cerrar",
+                on_click=lambda e, n=nombre: manejar_click_puerta(n, False)
+            )
+
+            fila = ft.Row([texto_estado, boton_abrir, boton_cerrar], spacing=10)
+            lista_componentes.append(fila)
+        return ft.Column(lista_componentes)
+    
+    def mostrar_puertas(e):
+        contenido_area.content = construir_contenido_puertas()
+        page.update()
 
     # --- Vista de INGRESOS ---
     def construir_contenido_ingresos():
@@ -131,12 +137,11 @@ def main(page: ft.Page):
         )
     ) 
     
-    def mostrar_puertas(e):
-        contenido_area.content = construir_contenido_puertas()
-        page.update()
+    
+    
 
     
 
-   
+    
 # Ejecutar en modo ventana (no navegador)
 ft.app(target=main)

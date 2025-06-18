@@ -1,15 +1,14 @@
+import flet as ft
+
 puertas = {
     "Puerta Entrada": False,  # False = cerrada
     "Puerta Salida": False,  
 }
 
-
-def mostrar_estado(nombre):
-    estado = puertas.get(nombre)
-    if estado is None:
-        print("Esa puerta no existe.")
-    else:
-        print(f"{nombre}: {'Abierta' if estado else 'Cerrada'}")
+def estado_puerta(nombre):
+    if nombre in puertas:
+        return "Abierta" if puertas[nombre] else "Cerrada"
+    return "Desconocida"
 
 def abrir_puerta(nombre):
     if nombre in puertas:
@@ -24,3 +23,11 @@ def cerrar_puerta(nombre):
         print(f"{nombre} cerrada.")
     else:
         print("Puerta no encontrada.")
+
+def obtener_todas():
+    return puertas
+
+   
+
+
+

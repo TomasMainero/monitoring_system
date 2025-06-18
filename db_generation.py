@@ -1,36 +1,42 @@
 import sqlite3
 
-# Crear base de datos de usuarios
-conn = sqlite3.connect("usuarios.db")
-cur = conn.cursor()
-cur.execute("""
-CREATE TABLE IF NOT EXISTS usuarios (
-    nombre TEXT PRIMARY KEY,
-    dentro BOOLEAN
-)
-""")
-conn.commit()
-conn.close()
+#Crear db con puertas, usuarios, y lasers
 
-# Crear base de datos de estados
-conn = sqlite3.connect("estados.db")
+conn = sqlite3.connect("puertas.db")
 cur = conn.cursor()
 cur.execute("""
-CREATE TABLE IF NOT EXISTS estados (
-    puertaEntrada TEXT,
-    estadoEntrada BOOLEAN,
-    puertaSalida TEXT,
-    estadoSalida BOOLEAN,
-    laser TEXT,
-    estadoLaser BOOLEAN
+CREATE TABLE IF NOT EXISTS puertas (
+    nombre TEXT PRIMARY KEY,
+    abierta INTEGER DEFAULT 0            
 )
 """)
-# Insertar un estado inicial si la tabla está vacía
-cur.execute("SELECT COUNT(*) FROM estados")
-if cur.fetchone()[0] == 0:
-    cur.execute("""
-    INSERT INTO estados (puertaEntrada, estadoEntrada, puertaSalida, estadoSalida, laser, estadoLaser)
-    VALUES (?, ?, ?, ?, ?, ?)
-    """, ("Puerta Entrada", 0, "Puerta Salida", 0, "Laser 1", 0))
+
+cur.execute("""
+CREATE TABLE IF NOT EXISTs usuarios (
+    nombre TEXT PRIMARY KEY,
+    dentro INTEGER default 0,
+    puede_abrir INTEGER DEFAULT 0
+)
+""")
+
+cur.execute("""
+CREATE TABLE IF NOT EXISTS lasers (
+    nombre TEXT PRIMARY KEY,
+    encendido INTEGER DEFAULT 0
+)
+""")
+
+# agregar datos en puertas
+cur.execute("""INSERT OR IGNORE INTO puertas VALUES('puerta entrada', 0)""")
+cur.execute("""INSERT OR IGNORE INTO puertas VALUES('puerta salida', 0)""")
+
+#agregar datos en usuarios
+cur.execute("""INSERT OR IGNORE INTO usuarios VALUES ('admin', 1, 1)""")
+cur.execute("""INSERT OR IGNORE INTO usuarios VALUES ('invitado', 0, 1)""")
+
+#agregar datos en lasers
+cur.execute("INSERT OR IGNORE INTO lasers VALUES ('laser entrada', 0)")
+cur.execute("INSERT OR IGNORE INTO lasers VALUES ('laser salida', 0)")
+
 conn.commit()
 conn.close()

@@ -2,26 +2,10 @@ import flet as ft
 import sqlite3
 from states import *
 
-# Función para obtener listas de usuarios
-def obtener_usuarios_ingresos():
-    conn = sqlite3.connect("usuarios.db") # Conexión a la base de datos
-    cur = conn.cursor()
-    
-    # Consulta usuarios que están dentro (dentro = 1)
-    cur.execute("SELECT nombre FROM usuarios WHERE dentro = 1")
-    dentro = [r[0] for r in cur.fetchall()] 
-    
-    # Consulta usuarios que están fuera (dentro = 0)
-    cur.execute("SELECT nombre FROM usuarios WHERE dentro = 0")
-    fuera = [r[0] for r in cur.fetchall()]
-    
-    conn.close()
-    return dentro, fuera
 
-
-    
 
 def main(page: ft.Page):
+    usuario_actual = "admin"
     page.title = "Sistema de Monitoreo"
     page.padding = 20
     page.window_maximized = True
@@ -39,10 +23,15 @@ def main(page: ft.Page):
     # --- Funciones de PUERTAS ---
     def manejar_click_puerta(nombre, abrir):
         if abrir:
-            abrir_puerta(nombre)
+            exito = abrir_puerta(nombre, usuario_actual)
         else:
-            cerrar_puerta(nombre)
-        mostrar_puertas(None)
+            exito = cerrar_puerta(nombre, usuario_actual)
+
+        if not exito:
+            contenido_area.content = ft.Text("⚠️ No autorizado para controlar esta puerta.", size=18)
+        else:
+            mostrar_puertas(None)
+        page.update()
 
     def construir_contenido_puertas():
         lista_componentes = []

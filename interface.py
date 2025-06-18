@@ -1,19 +1,51 @@
 import flet as ft
 import sqlite3
+from estados import *
 
 # Función para obtener listas de usuarios
 def obtener_usuarios_ingresos():
-    conn = sqlite3.connect("usuarios.db")
+    conn = sqlite3.connect("usuarios.db") # Conexión a la base de datos
     cur = conn.cursor()
     
+    # Consulta usuarios que están dentro (dentro = 1)
     cur.execute("SELECT nombre FROM usuarios WHERE dentro = 1")
-    dentro = [r[0] for r in cur.fetchall()]
+    dentro = [r[0] for r in cur.fetchall()] 
     
+    # Consulta usuarios que están fuera (dentro = 0)
     cur.execute("SELECT nombre FROM usuarios WHERE dentro = 0")
     fuera = [r[0] for r in cur.fetchall()]
     
     conn.close()
     return dentro, fuera
+
+def manejar_click_puerta(nombre, abrir):
+        if abrir:
+            abrir_puerta(nombre)
+        else:
+            cerrar_puerta(nombre)
+        mostrar_puertas
+
+# Contenido puertas
+def construir_contenido_puertas():
+    lista_componentes = []
+    for nombre, estado in obtener_todas.items():
+        estado_texto = estado_puerta(nombre)
+        texto_estado = ft.Text(f"{nombre.title()}: {estado_texto}", size=16)
+
+        boton_abrir = ft.ElevatedButton(
+            "Abrir",
+            on_click=lambda e, n=nombre: manejar_click_puerta(n, True)
+        )
+
+        boton_cerrar = ft.ElevatedButton(
+            "Abrir",
+            on_click=lambda e, n=nombre: manejar_click_puerta(n, True)
+        )
+
+        fila = ft.Row([texto_estado, boton_abrir, boton_cerrar], spacing=10)
+        lista_componentes.append(fila)
+    return ft.Column(lista_componentes)
+    
 
 def main(page: ft.Page):
     page.title = "Sistema de Monitoreo"
@@ -75,7 +107,8 @@ def main(page: ft.Page):
         [
             ft.ElevatedButton("Ingresos", on_click=mostrar_ingresos),
             ft.ElevatedButton("Estados", on_click=mostrar_estados),
-            ft.ElevatedButton("Operaciones", on_click=mostrar_operaciones)
+            ft.ElevatedButton("Operaciones", on_click=mostrar_operaciones),
+            ft.ElevatedButton("Puertas", on_click=mostrar_puertas)
         ],
         alignment=ft.MainAxisAlignment.CENTER,
         spacing=20
@@ -96,7 +129,14 @@ def main(page: ft.Page):
             expand=True,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER
         )
-    )
+    ) 
+    
+    def mostrar_puertas(e):
+        contenido_area.content = construir_contenido_puertas()
+        page.update()
 
+    
+
+   
 # Ejecutar en modo ventana (no navegador)
 ft.app(target=main)

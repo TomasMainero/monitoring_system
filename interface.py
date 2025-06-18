@@ -1,6 +1,6 @@
 import flet as ft
 import sqlite3
-from estados import *
+from states import *
 
 # Función para obtener listas de usuarios
 def obtener_usuarios_ingresos():
@@ -67,6 +67,38 @@ def main(page: ft.Page):
     def mostrar_puertas(e):
         contenido_area.content = construir_contenido_puertas()
         page.update()
+        
+    # --- Funciones de LASERS ---
+    def manejar_click_laser(nombreLaser, prender):
+        if prender:
+            prender_laser(nombreLaser)
+        else:
+            apagar_laser(nombreLaser)
+        mostrar_lasers(None)
+        
+    def construir_contenido_lasers():
+        lista_componentes_laser = []
+        for nombre, estado in obtener_lasers().items():
+            estado_laser_texto = estado_laser(nombre)
+            texto_laser_estado = ft.Text(f"{nombre.title()}: {estado_laser_texto}", size=16)
+            
+            boton_prender = ft.ElevatedButton(
+                "Encender",
+                on_click=lambda e, n=nombre: manejar_click_laser(n, True)
+            )
+            
+            boton_apagar = ft.ElevatedButton(
+                "Apagar",
+                on_click=lambda e, n=nombre: manejar_click_laser(n, False)
+            )
+            
+            fila = ft.Row([texto_laser_estado, boton_prender, boton_apagar], spacing = 10)
+            lista_componentes_laser.append(fila)
+        return ft.Column(lista_componentes_laser)
+    
+    def mostrar_lasers(a):
+        contenido_area.content = construir_contenido_lasers()
+        page.update()
 
     # --- Vista de INGRESOS ---
     def construir_contenido_ingresos():
@@ -114,7 +146,8 @@ def main(page: ft.Page):
             ft.ElevatedButton("Ingresos", on_click=mostrar_ingresos),
             ft.ElevatedButton("Estados", on_click=mostrar_estados),
             ft.ElevatedButton("Operaciones", on_click=mostrar_operaciones),
-            ft.ElevatedButton("Puertas", on_click=mostrar_puertas)
+            ft.ElevatedButton("Puertas", on_click=mostrar_puertas),
+            ft.ElevatedButton("Lasers", on_click=mostrar_lasers)
         ],
         alignment=ft.MainAxisAlignment.CENTER,
         spacing=20
@@ -137,11 +170,6 @@ def main(page: ft.Page):
         )
     ) 
     
-    
-    
 
-    
-
-    
 # Ejecutar en modo ventana (no navegador)
 ft.app(target=main)

@@ -2,13 +2,12 @@ import flet as ft
 import sqlite3
 from states import *
 
-
-
 def main(page: ft.Page):
     usuario_actual = "admin"
     page.title = "Sistema de Monitoreo"
     page.padding = 20
-    page.window_maximized = True
+    page.window.width = 720
+    page.window.height = 600
 
     # Contenedor principal
     contenido_area = ft.Container(
@@ -30,7 +29,7 @@ def main(page: ft.Page):
         if not exito:
             contenido_area.content = ft.Text("⚠️ No autorizado para controlar esta puerta.", size=18)
         else:
-            mostrar_puertas(None)
+            mostrar_operaciones(None)
         page.update()
 
     def construir_contenido_puertas():
@@ -52,42 +51,34 @@ def main(page: ft.Page):
             fila = ft.Row([texto_estado, boton_abrir, boton_cerrar], spacing=10)
             lista_componentes.append(fila)
         return ft.Column(lista_componentes)
-    
-    def mostrar_puertas(e):
-        contenido_area.content = construir_contenido_puertas()
-        page.update()
-        
+
     # --- Funciones de LASERS ---
     def manejar_click_laser(nombreLaser, prender):
         if prender:
             prender_laser(nombreLaser)
         else:
             apagar_laser(nombreLaser)
-        mostrar_lasers(None)
-        
+        mostrar_operaciones(None)
+
     def construir_contenido_lasers():
         lista_componentes_laser = []
         for nombre, estado in obtener_lasers().items():
             estado_laser_texto = estado_laser(nombre)
             texto_laser_estado = ft.Text(f"{nombre.title()}: {estado_laser_texto}", size=16)
-            
+
             boton_prender = ft.ElevatedButton(
                 "Encender",
                 on_click=lambda e, n=nombre: manejar_click_laser(n, True)
             )
-            
+
             boton_apagar = ft.ElevatedButton(
                 "Apagar",
                 on_click=lambda e, n=nombre: manejar_click_laser(n, False)
             )
-            
-            fila = ft.Row([texto_laser_estado, boton_prender, boton_apagar], spacing = 10)
+
+            fila = ft.Row([texto_laser_estado, boton_prender, boton_apagar], spacing=10)
             lista_componentes_laser.append(fila)
         return ft.Column(lista_componentes_laser)
-    
-    def mostrar_lasers(a):
-        contenido_area.content = construir_contenido_lasers()
-        page.update()
 
     # --- Vista de INGRESOS ---
     def construir_contenido_ingresos():
@@ -109,43 +100,89 @@ def main(page: ft.Page):
             alignment=ft.MainAxisAlignment.SPACE_EVENLY
         )
 
-        boton_actualizar = ft.ElevatedButton("Actualizar", on_click=lambda e: mostrar_ingresos(None))
+        boton_actualizar = ft.ElevatedButton(
+            "🔄 Actualizar",
+            on_click=lambda e: mostrar_ingresos(None),
+            bgcolor=ft.Colors.GREEN_300,
+            color=ft.Colors.BLACK
+        )
 
         return ft.Column([
             fila,
-            boton_actualizar
+            ft.Container(
+                content=boton_actualizar,
+                alignment=ft.alignment.center,
+                padding=10
+            )
         ])
 
-    # Funciones para pestañas
+    # --- Estado de botones seleccionados ---
+    botones_estado = {
+        "Ingresos": False,
+        "Estados": False,
+        "Operaciones": False
+    }
+
+    def actualizar_colores_botones():
+        for boton in botones:
+            nombre = boton.text
+            seleccionado = botones_estado[nombre]
+            boton.bgcolor = ft.Colors.BLUE_400 if seleccionado else ft.Colors.BLUE_200
+            boton.color = ft.Colors.WHITE
+
+    # --- Funciones para pestañas con selección ---
     def mostrar_ingresos(e):
+        for k in botones_estado:
+            botones_estado[k] = False
+        botones_estado["Ingresos"] = True
+        actualizar_colores_botones()
         contenido_area.content = construir_contenido_ingresos()
         page.update()
 
     def mostrar_estados(e):
+        for k in botones_estado:
+            botones_estado[k] = False
+        botones_estado["Estados"] = True
+        actualizar_colores_botones()
         contenido_area.content = ft.Text("Contenido de Estados", size=20)
         page.update()
 
     def mostrar_operaciones(e):
-        contenido_area.content = ft.Text("Contenido de Operaciones", size=20)
+        for k in botones_estado:
+            botones_estado[k] = False
+        botones_estado["Operaciones"] = True
+        actualizar_colores_botones()
+
+        puertas = construir_contenido_puertas()
+        lasers = construir_contenido_lasers()
+
+        contenido_area.content = ft.Column([
+            ft.Text("🔐 Control de Puertas", size=20, weight="bold"),
+            puertas,
+            ft.Divider(),
+            ft.Text("🔦 Control de Lasers", size=20, weight="bold"),
+            lasers
+        ], spacing=20)
         page.update()
 
-    # Botones superiores
+    # --- Crear botones y aplicarlos a la fila ---
+    botones = [
+        ft.ElevatedButton("Ingresos", on_click=mostrar_ingresos),
+        ft.ElevatedButton("Estados", on_click=mostrar_estados),
+        ft.ElevatedButton("Operaciones", on_click=mostrar_operaciones),
+    ]
+    actualizar_colores_botones()
+
     botones_menu = ft.Row(
-        [
-            ft.ElevatedButton("Ingresos", on_click=mostrar_ingresos),
-            ft.ElevatedButton("Estados", on_click=mostrar_estados),
-            ft.ElevatedButton("Operaciones", on_click=mostrar_operaciones),
-            ft.ElevatedButton("Puertas", on_click=mostrar_puertas),
-            ft.ElevatedButton("Lasers", on_click=mostrar_lasers)
-        ],
+        botones,
         alignment=ft.MainAxisAlignment.CENTER,
         spacing=20
     )
 
-    # Título principal
+    # --- Título principal ---
     titulo = ft.Text("Sistema de monitoreo", size=25, weight="bold", text_align="center")
 
-    # Layout general
+    # --- Layout general ---
     page.add(
         ft.Column(
             [
@@ -157,8 +194,7 @@ def main(page: ft.Page):
             expand=True,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER
         )
-    ) 
-    
+    )
 
-# Ejecutar en modo ventana (no navegador)
+# Ejecutar en modo ventana
 ft.app(target=main)

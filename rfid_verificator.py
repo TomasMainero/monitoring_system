@@ -4,14 +4,19 @@ def procesar_ingreso(codigo_rfid: str) -> int:
     resultado = 0  # por defecto: acceso denegado
 
     try:
-        conn = sqlite3.connect("usuarios.db")
+        conn = sqlite3.connect("puertas.db")
         cur = conn.cursor()
 
-        cur.execute("SELECT * FROM usuarios WHERE codigo_rfid = ?", (codigo_rfid,))
+        cur.execute("SELECT nombre FROM usuarios WHERE codigo_rfid = ?", (codigo_rfid,))
         usuario = cur.fetchone()
 
         if usuario:
-            cur.execute("UPDATE usuarios SET dentro = 1 WHERE codigo_rfid = ?", (codigo_rfid,))
+            # Alternar estado dentro
+            cur.execute("SELECT dentro FROM usuarios WHERE codigo_rfid = ?", (codigo_rfid,))
+            dentro_actual = cur.fetchone()[0]
+            nuevo_estado = 0 if dentro_actual == 1 else 1
+
+            cur.execute("UPDATE usuarios SET dentro = ? WHERE codigo_rfid = ?", (nuevo_estado, codigo_rfid))
             conn.commit()
             resultado = 1  # acceso autorizado
 
@@ -20,7 +25,7 @@ def procesar_ingreso(codigo_rfid: str) -> int:
 
     return resultado
 
-#Simulacion de ingreso de codigo RFID
+# Simulación
 codigo = input("Ingresá un código RFID: ")
 resultado = procesar_ingreso(codigo)
 
